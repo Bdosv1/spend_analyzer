@@ -20,7 +20,7 @@
         </p>
         <div class="hero-actions">
             <a href="{{ url_for('register') }}" class="btn-hero-primary">Create free account</a>
-            <a href="{{ url_for('login') }}" class="btn-hero-secondary">See how it works</a>
+            <button type="button" class="btn-hero-secondary" id="openVideoModal">See how it works</button>
         </div>
     </div>
     <div class="hero-visual">
@@ -99,4 +99,72 @@
     </div>
 </section>
 
+<!-- Video Modal -->
+<div class="video-modal-overlay" id="videoModal" aria-hidden="true">
+    <div class="video-modal-container">
+        <button class="video-modal-close" id="closeVideoModal" aria-label="Close modal">&times;</button>
+        <div class="video-modal-wrapper">
+            <iframe id="videoIframe"
+                    src="https://www.youtube.com/embed/9YnxXEE-fvU?enablejsapi=1"
+                    title="Product Walkthrough"
+                    frameborder="0"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                    referrerpolicy="strict-origin-when-cross-origin"
+                    allowfullscreen>
+            </iframe>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const modal = document.getElementById('videoModal');
+    const openBtn = document.getElementById('openVideoModal');
+    const closeBtn = document.getElementById('closeVideoModal');
+    const iframe = document.getElementById('videoIframe');
+
+    if (!modal || !openBtn || !closeBtn || !iframe) return;
+
+    const postToIframe = (func, args = []) => {
+        if (iframe.contentWindow) {
+            iframe.contentWindow.postMessage(
+                JSON.stringify({ event: 'command', func: func, args: args }),
+                '*'
+            );
+        }
+    };
+
+    const openModal = () => {
+        modal.classList.add('is-active');
+        modal.setAttribute('aria-hidden', 'false');
+        document.body.style.overflow = 'hidden';
+        postToIframe('playVideo');
+    };
+
+    const closeModal = () => {
+        modal.classList.remove('is-active');
+        modal.setAttribute('aria-hidden', 'true');
+        document.body.style.overflow = '';
+        postToIframe('pauseVideo');
+    };
+
+    openBtn.addEventListener('click', openModal);
+    closeBtn.addEventListener('click', closeModal);
+
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+            closeModal();
+        }
+    });
+
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && modal.classList.contains('is-active')) {
+            closeModal();
+        }
+    });
+});
+</script>
 {% endblock %}
